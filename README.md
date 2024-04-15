@@ -1,4 +1,4 @@
-# npm-package-template-tsup
+# useQSState
 
 ## how to use this
 

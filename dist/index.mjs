@@ -1,5 +1,6 @@
-// src/use-qs-state.ts
-import { useEffect, useState } from "react";
+// src/use-query-string-state.ts
+import { useCallback, useEffect, useState } from "react";
+var RESET = "RESET";
 function isNumber(num) {
   if (typeof num === "number") {
     return num - num === 0;
@@ -48,7 +49,7 @@ function createQueryString() {
     stringify: stringifyQueryString
   };
 }
-function useQSState(initialState, {
+function useQueryStringState(initialState, {
   onValueChange,
   onPathnameChange,
   queryString = createQueryString(),
@@ -68,13 +69,15 @@ function useQSState(initialState, {
     isSyncPathname ? getInitialStateWithQueryString(initialState) : initialState
   );
   const setState = (value) => {
-    const payload = value instanceof Function ? value(state) : value;
+    const payload = value === RESET ? initialState : value instanceof Function ? value(state) : value;
     _setState(payload);
+    onValueChange?.(payload);
     const url = new URL(window.location.href);
     const parsed = queryString.parse(url.searchParams.toString());
     const searchParams = queryString.stringify(Object.assign(parsed, payload));
-    onValueChange?.(payload);
-    onPathnameChange?.(url.pathname + "?" + searchParams);
+    const resultUrl = url.pathname + "?" + searchParams;
+    window.history.pushState(null, "", resultUrl);
+    onPathnameChange?.(resultUrl);
   };
   useEffect(() => {
     const handlePopState = () => {
@@ -85,9 +88,15 @@ function useQSState(initialState, {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isSyncPathname, initialState]);
-  return [state, setState];
+  const reset = useCallback(
+    () => () => {
+      setState(RESET);
+    },
+    []
+  );
+  return [state, setState, reset];
 }
 export {
-  useQSState
+  useQueryStringState
 };
 //# sourceMappingURL=index.mjs.map

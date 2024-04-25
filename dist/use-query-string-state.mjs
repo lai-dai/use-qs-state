@@ -1,29 +1,6 @@
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// src/use-qs-state.ts
-var use_qs_state_exports = {};
-__export(use_qs_state_exports, {
-  useQSState: () => useQSState
-});
-module.exports = __toCommonJS(use_qs_state_exports);
-var import_react = require("react");
+// src/use-query-string-state.ts
+import { useCallback, useEffect, useState } from "react";
+var RESET = "RESET";
 function isNumber(num) {
   if (typeof num === "number") {
     return num - num === 0;
@@ -72,7 +49,7 @@ function createQueryString() {
     stringify: stringifyQueryString
   };
 }
-function useQSState(initialState, {
+function useQueryStringState(initialState, {
   onValueChange,
   onPathnameChange,
   queryString = createQueryString(),
@@ -88,19 +65,21 @@ function useQSState(initialState, {
     const parsed = queryString.parse(url.searchParams.toString());
     return Object.assign({}, initialState2, parsed);
   };
-  const [state, _setState] = (0, import_react.useState)(
+  const [state, _setState] = useState(
     isSyncPathname ? getInitialStateWithQueryString(initialState) : initialState
   );
   const setState = (value) => {
-    const payload = value instanceof Function ? value(state) : value;
+    const payload = value === RESET ? initialState : value instanceof Function ? value(state) : value;
     _setState(payload);
+    onValueChange?.(payload);
     const url = new URL(window.location.href);
     const parsed = queryString.parse(url.searchParams.toString());
     const searchParams = queryString.stringify(Object.assign(parsed, payload));
-    onValueChange?.(payload);
-    onPathnameChange?.(url.pathname + "?" + searchParams);
+    const resultUrl = url.pathname + "?" + searchParams;
+    window.history.pushState(null, "", resultUrl);
+    onPathnameChange?.(resultUrl);
   };
-  (0, import_react.useEffect)(() => {
+  useEffect(() => {
     const handlePopState = () => {
       if (isSyncPathname) {
         _setState(getInitialStateWithQueryString(initialState));
@@ -109,10 +88,15 @@ function useQSState(initialState, {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isSyncPathname, initialState]);
-  return [state, setState];
+  const reset = useCallback(
+    () => () => {
+      setState(RESET);
+    },
+    []
+  );
+  return [state, setState, reset];
 }
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
-  useQSState
-});
-//# sourceMappingURL=use-qs-state.js.map
+export {
+  useQueryStringState
+};
+//# sourceMappingURL=use-query-string-state.mjs.map

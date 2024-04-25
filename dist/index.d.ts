@@ -1,1 +1,1 @@
-export { QueryString, UseQSStateOptions, useQSState } from './use-qs-state.js';
+export { QueryString, UseQueryStringStateOptions, useQueryStringState } from './use-query-string-state.js';

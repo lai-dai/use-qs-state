@@ -1,2 +1,5 @@
-export { useQSState } from "./use-qs-state";
-export type { QueryString, UseQSStateOptions } from "./use-qs-state";
+export { useQueryStringState } from "./use-query-string-state";
+export type {
+  QueryString,
+  UseQueryStringStateOptions,
+} from "./use-query-string-state";

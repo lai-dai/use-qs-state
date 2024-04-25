@@ -1,23 +1,24 @@
 {
-  "name": "@lai-dai/use-qs-state",
+  "name": "@lai-dai/use-query-string-state",
   "version": "0.1.0",
   "description": "a react hook with querystring state",
   "scripts": {
     "build": "tsup ./src"
   },
-  "homepage": "https://github.com/lai-dai/use-qs-state",
-  "url": "https://github.com/lai-dai/use-qs-state/issue",
+  "homepage": "https://github.com/lai-dai/use-query-string-state",
+  "url": "https://github.com/lai-dai/use-query-string-state/issue",
   "email": "laidai9966@gmail.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lai-dai/use-qs-state.git"
+    "url": "git+https://github.com/lai-dai/use-query-string-state.git"
   },
   "keywords": [
     "react",
     "hook",
     "querystring",
     "state",
-    "useQSState"
+    "useQSState",
+    "useQueryStringState"
   ],
   "author": "lai dai",
   "license": "ISC",

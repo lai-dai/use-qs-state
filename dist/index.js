@@ -20,12 +20,13 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/index.ts
 var src_exports = {};
 __export(src_exports, {
-  useQSState: () => useQSState
+  useQueryStringState: () => useQueryStringState
 });
 module.exports = __toCommonJS(src_exports);
 
-// src/use-qs-state.ts
+// src/use-query-string-state.ts
 var import_react = require("react");
+var RESET = "RESET";
 function isNumber(num) {
   if (typeof num === "number") {
     return num - num === 0;
@@ -74,7 +75,7 @@ function createQueryString() {
     stringify: stringifyQueryString
   };
 }
-function useQSState(initialState, {
+function useQueryStringState(initialState, {
   onValueChange,
   onPathnameChange,
   queryString = createQueryString(),
@@ -94,13 +95,15 @@ function useQSState(initialState, {
     isSyncPathname ? getInitialStateWithQueryString(initialState) : initialState
   );
   const setState = (value) => {
-    const payload = value instanceof Function ? value(state) : value;
+    const payload = value === RESET ? initialState : value instanceof Function ? value(state) : value;
     _setState(payload);
+    onValueChange?.(payload);
     const url = new URL(window.location.href);
     const parsed = queryString.parse(url.searchParams.toString());
     const searchParams = queryString.stringify(Object.assign(parsed, payload));
-    onValueChange?.(payload);
-    onPathnameChange?.(url.pathname + "?" + searchParams);
+    const resultUrl = url.pathname + "?" + searchParams;
+    window.history.pushState(null, "", resultUrl);
+    onPathnameChange?.(resultUrl);
   };
   (0, import_react.useEffect)(() => {
     const handlePopState = () => {
@@ -111,10 +114,16 @@ function useQSState(initialState, {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isSyncPathname, initialState]);
-  return [state, setState];
+  const reset = (0, import_react.useCallback)(
+    () => () => {
+      setState(RESET);
+    },
+    []
+  );
+  return [state, setState, reset];
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  useQSState
+  useQueryStringState
 });
 //# sourceMappingURL=index.js.map

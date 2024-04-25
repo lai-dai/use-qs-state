@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type SetStateAction<S> = S | ((prevState: S) => S);
 
 type Dispatch<A> = (value: A) => void;
+
+const RESET = "RESET";
 
 export interface QueryString {
   parse: (str: string) => Record<string, any>;
   stringify: (obj: Record<string, any>) => string;
 }
 
-export interface UseQSStateOptions<S extends object> {
+export interface UseQueryStringStateOptions<S extends object> {
   onValueChange?: (value: S) => void;
   onPathnameChange?: (pathname: string) => void;
   queryString?: QueryString;
@@ -76,15 +78,15 @@ function createQueryString(): QueryString {
   };
 }
 
-export function useQSState<S extends object>(
+export function useQueryStringState<S extends object>(
   initialState: Readonly<S>,
   {
     onValueChange,
     onPathnameChange,
     queryString = createQueryString(),
     isSyncPathname = true,
-  }: UseQSStateOptions<S> = {}
-): [S, Dispatch<SetStateAction<S>>] {
+  }: UseQueryStringStateOptions<S> = {}
+): [S, Dispatch<SetStateAction<S>>, Function] {
   const getInitialStateWithQueryString = <S extends object>(
     initialState: Readonly<S>
   ) => {
@@ -106,17 +108,26 @@ export function useQSState<S extends object>(
       : initialState
   );
 
-  const setState: Dispatch<SetStateAction<S>> = (value) => {
-    const payload = value instanceof Function ? value(state) : value;
+  const setState: Dispatch<SetStateAction<S> | typeof RESET> = (value) => {
+    const payload =
+      value === RESET
+        ? initialState
+        : value instanceof Function
+        ? value(state)
+        : value;
 
     _setState(payload);
+    onValueChange?.(payload);
 
     const url = new URL(window.location.href);
     const parsed = queryString.parse(url.searchParams.toString());
     const searchParams = queryString.stringify(Object.assign(parsed, payload));
 
-    onValueChange?.(payload);
-    onPathnameChange?.(url.pathname + "?" + searchParams);
+    const resultUrl = url.pathname + "?" + searchParams;
+
+    window.history.pushState(null, "", resultUrl);
+
+    onPathnameChange?.(resultUrl);
   };
 
   useEffect(() => {
@@ -129,5 +140,12 @@ export function useQSState<S extends object>(
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isSyncPathname, initialState]);
 
-  return [state, setState];
+  const reset = useCallback(
+    () => () => {
+      setState(RESET);
+    },
+    []
+  );
+
+  return [state, setState, reset];
 }

@@ -4,12 +4,12 @@ interface QueryString {
     parse: (str: string) => Record<string, any>;
     stringify: (obj: Record<string, any>) => string;
 }
-interface UseQSStateOptions<S extends object> {
+interface UseQueryStringStateOptions<S extends object> {
     onValueChange?: (value: S) => void;
     onPathnameChange?: (pathname: string) => void;
     queryString?: QueryString;
     isSyncPathname?: boolean;
 }
-declare function useQSState<S extends object>(initialState: Readonly<S>, { onValueChange, onPathnameChange, queryString, isSyncPathname, }?: UseQSStateOptions<S>): [S, Dispatch<SetStateAction<S>>];
+declare function useQueryStringState<S extends object>(initialState: Readonly<S>, { onValueChange, onPathnameChange, queryString, isSyncPathname, }?: UseQueryStringStateOptions<S>): [S, Dispatch<SetStateAction<S>>, Function];
 
-export { QueryString, UseQSStateOptions, useQSState };
+export { QueryString, UseQueryStringStateOptions, useQueryStringState };

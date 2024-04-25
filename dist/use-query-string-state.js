@@ -100,8 +100,11 @@ function useQueryStringState(initialState, {
     const parsed = queryString.parse(url.searchParams.toString());
     const searchParams = queryString.stringify(Object.assign(parsed, payload));
     const resultUrl = url.pathname + "?" + searchParams;
-    window.history.pushState(null, "", resultUrl);
-    onPathnameChange?.(resultUrl);
+    if (onPathnameChange instanceof Function) {
+      onPathnameChange(resultUrl);
+    } else {
+      window.history.pushState(null, "", resultUrl);
+    }
   };
   (0, import_react.useEffect)(() => {
     const handlePopState = () => {

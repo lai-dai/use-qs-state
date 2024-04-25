@@ -130,9 +130,11 @@ export function useQueryStringState<S extends object>(
 
     const resultUrl = url.pathname + "?" + searchParams;
 
-    window.history.pushState(null, "", resultUrl);
-
-    onPathnameChange?.(resultUrl);
+    if (onPathnameChange instanceof Function) {
+      onPathnameChange(resultUrl);
+    } else {
+      window.history.pushState(null, "", resultUrl);
+    }
   };
 
   useEffect(() => {

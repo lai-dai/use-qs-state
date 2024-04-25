@@ -48,10 +48,9 @@ function parseQueryString<Value>(searchParams: string, initialValue: Value) {
   // Set will return only unique keys()
   new Set([...urlParams.keys()]).forEach((key) => {
     const numberType =
-      (initialValue instanceof Object &&
-        key in initialValue &&
-        typeof initialValue[key as keyof typeof initialValue] === "number") ||
-      initialValue instanceof Number;
+      initialValue instanceof Object &&
+      key in initialValue &&
+      typeof initialValue[key as keyof typeof initialValue] === "number";
     output[key] =
       urlParams.getAll(key).length > 1
         ? numberType

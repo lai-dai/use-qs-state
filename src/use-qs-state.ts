@@ -119,17 +119,15 @@ export function useQSState<S extends object>(
     onPathnameChange?.(url.pathname + "?" + searchParams);
   };
 
-  const handlePopState = () => {
-    if (isSyncPathname) {
-      _setState(getInitialStateWithQueryString<S>(initialState));
-    }
-  };
-
   useEffect(() => {
+    const handlePopState = () => {
+      if (isSyncPathname) {
+        _setState(getInitialStateWithQueryString<S>(initialState));
+      }
+    };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isSyncPathname, initialState]);
 
   return [state, setState];
 }

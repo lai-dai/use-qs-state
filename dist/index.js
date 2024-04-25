@@ -102,15 +102,15 @@ function useQSState(initialState, {
     onValueChange?.(payload);
     onPathnameChange?.(url.pathname + "?" + searchParams);
   };
-  const handlePopState = () => {
-    if (isSyncPathname) {
-      _setState(getInitialStateWithQueryString(initialState));
-    }
-  };
   (0, import_react.useEffect)(() => {
+    const handlePopState = () => {
+      if (isSyncPathname) {
+        _setState(getInitialStateWithQueryString(initialState));
+      }
+    };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [isSyncPathname, initialState]);
   return [state, setState];
 }
 // Annotate the CommonJS export names for ESM import in node:

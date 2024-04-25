@@ -76,15 +76,15 @@ function useQSState(initialState, {
     onValueChange?.(payload);
     onPathnameChange?.(url.pathname + "?" + searchParams);
   };
-  const handlePopState = () => {
-    if (isSyncPathname) {
-      _setState(getInitialStateWithQueryString(initialState));
-    }
-  };
   useEffect(() => {
+    const handlePopState = () => {
+      if (isSyncPathname) {
+        _setState(getInitialStateWithQueryString(initialState));
+      }
+    };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [isSyncPathname, initialState]);
   return [state, setState];
 }
 export {

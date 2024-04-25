@@ -1,4 +1,4 @@
-# useQSState
+# useQueryStringState
 
 ## how to use this
 
@@ -13,7 +13,7 @@ npm i github:lai-dai/use-query-string-state
 ```js
 import { useQueryStringState } from "@lai-dai/use-query-string-state";
 
-const [state, setState, reset] = useQSState({
+const [state, setState, reset] = useQueryStringState({
   text: "hello world",
   count: 1,
 });

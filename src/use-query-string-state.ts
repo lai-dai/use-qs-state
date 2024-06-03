@@ -84,39 +84,47 @@ function createQueryString<Value>(initialValue: Value): QueryString {
 }
 
 export function useQueryStringState<S extends object>(
-  initialState: Readonly<S>,
+  initialValue: Readonly<S>,
   {
     onValueChange,
     onPathnameChange,
-    queryString = createQueryString<S>(initialState),
+    queryString = createQueryString<S>(initialValue),
     isSyncPathname = true,
   }: UseQueryStringStateOptions<S> = {}
 ): [S, Dispatch<SetStateAction<S>>, Function] {
   const getInitialStateWithQueryString = <S extends object>(
-    initialState: Readonly<S>
+    initialValue: Readonly<S>
   ) => {
-    const url = new URL(window.location.href);
+    try {
+      if (typeof window !== "undefined" && isValidUrl(window.location.href)) {
+        const url = new URL(window.location.href);
 
-    for (const k of url.searchParams.keys()) {
-      if (!(k in initialState)) {
-        url.searchParams.delete(k);
+        for (const k of url.searchParams.keys()) {
+          if (!(k in initialValue)) {
+            url.searchParams.delete(k);
+          }
+        }
+        const urlParsed = queryString.parse(url.searchParams.toString());
+
+        return Object.assign({}, initialValue, urlParsed);
       }
+      return initialValue;
+    } catch (error) {
+      console.error(error);
+      return initialValue;
     }
-    const parsed = queryString.parse(url.searchParams.toString());
-
-    return Object.assign({}, initialState, parsed);
   };
 
   const [state, _setState] = useState<S>(
     isSyncPathname
-      ? getInitialStateWithQueryString<S>(initialState)
-      : initialState
+      ? getInitialStateWithQueryString<S>(initialValue)
+      : initialValue
   );
 
   const setState: Dispatch<SetStateAction<S> | typeof RESET> = (value) => {
     const payload =
       value === RESET
-        ? initialState
+        ? initialValue
         : value instanceof Function
         ? value(state)
         : value;
@@ -124,28 +132,37 @@ export function useQueryStringState<S extends object>(
     _setState(payload);
     onValueChange?.(payload);
 
-    const url = new URL(window.location.href);
-    const parsed = queryString.parse(url.searchParams.toString());
-    const searchParams = queryString.stringify(Object.assign(parsed, payload));
+    if (typeof window !== "undefined" && isValidUrl(window.location.href)) {
+      const url = new URL(window.location.href);
+      const parsed = queryString.parse(url.searchParams.toString());
+      const searchParams = queryString.stringify(
+        Object.assign(parsed, payload)
+      );
 
-    const resultUrl = url.pathname + "?" + searchParams;
+      const resultUrl = url.pathname + "?" + searchParams;
 
-    if (onPathnameChange instanceof Function) {
-      onPathnameChange(resultUrl);
-    } else {
-      window.history.pushState(null, "", resultUrl);
+      if (onPathnameChange instanceof Function) {
+        onPathnameChange(resultUrl);
+      } else {
+        window.history.pushState(null, "", resultUrl);
+      }
     }
   };
 
   useEffect(() => {
-    const handlePopState = () => {
-      if (isSyncPathname) {
-        _setState(getInitialStateWithQueryString<S>(initialState));
-      }
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [isSyncPathname, initialState]);
+    if (
+      typeof window !== "undefined" &&
+      typeof window.addEventListener === "function"
+    ) {
+      const handlePopState = () => {
+        if (isSyncPathname) {
+          _setState(getInitialStateWithQueryString<S>(initialValue));
+        }
+      };
+      window.addEventListener("popstate", handlePopState);
+      return () => window.removeEventListener("popstate", handlePopState);
+    }
+  }, [isSyncPathname, initialValue]);
 
   const reset = useCallback(
     () => () => {
@@ -155,4 +172,13 @@ export function useQueryStringState<S extends object>(
   );
 
   return [state, setState, reset];
+}
+
+function isValidUrl(str: string) {
+  try {
+    new URL(str);
+    return true;
+  } catch (err) {
+    return false;
+  }
 }

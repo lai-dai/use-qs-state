@@ -75,48 +75,62 @@ function createQueryString(initialValue) {
     stringify: stringifyQueryString
   };
 }
-function useQueryStringState(initialState, {
+function useQueryStringState(initialValue, {
   onValueChange,
   onPathnameChange,
-  queryString = createQueryString(initialState),
+  queryString = createQueryString(initialValue),
   isSyncPathname = true
 } = {}) {
-  const getInitialStateWithQueryString = (initialState2) => {
-    const url = new URL(window.location.href);
-    for (const k of url.searchParams.keys()) {
-      if (!(k in initialState2)) {
-        url.searchParams.delete(k);
+  const getInitialStateWithQueryString = (initialValue2) => {
+    try {
+      if (typeof window !== "undefined" && isValidUrl(window.location.href)) {
+        const url = new URL(window.location.href);
+        for (const k of url.searchParams.keys()) {
+          if (!(k in initialValue2)) {
+            url.searchParams.delete(k);
+          }
+        }
+        const urlParsed = queryString.parse(url.searchParams.toString());
+        return Object.assign({}, initialValue2, urlParsed);
       }
+      return initialValue2;
+    } catch (error) {
+      console.error(error);
+      return initialValue2;
     }
-    const parsed = queryString.parse(url.searchParams.toString());
-    return Object.assign({}, initialState2, parsed);
   };
   const [state, _setState] = (0, import_react.useState)(
-    isSyncPathname ? getInitialStateWithQueryString(initialState) : initialState
+    isSyncPathname ? getInitialStateWithQueryString(initialValue) : initialValue
   );
   const setState = (value) => {
-    const payload = value === RESET ? initialState : value instanceof Function ? value(state) : value;
+    const payload = value === RESET ? initialValue : value instanceof Function ? value(state) : value;
     _setState(payload);
     onValueChange?.(payload);
-    const url = new URL(window.location.href);
-    const parsed = queryString.parse(url.searchParams.toString());
-    const searchParams = queryString.stringify(Object.assign(parsed, payload));
-    const resultUrl = url.pathname + "?" + searchParams;
-    if (onPathnameChange instanceof Function) {
-      onPathnameChange(resultUrl);
-    } else {
-      window.history.pushState(null, "", resultUrl);
+    if (typeof window !== "undefined" && isValidUrl(window.location.href)) {
+      const url = new URL(window.location.href);
+      const parsed = queryString.parse(url.searchParams.toString());
+      const searchParams = queryString.stringify(
+        Object.assign(parsed, payload)
+      );
+      const resultUrl = url.pathname + "?" + searchParams;
+      if (onPathnameChange instanceof Function) {
+        onPathnameChange(resultUrl);
+      } else {
+        window.history.pushState(null, "", resultUrl);
+      }
     }
   };
   (0, import_react.useEffect)(() => {
-    const handlePopState = () => {
-      if (isSyncPathname) {
-        _setState(getInitialStateWithQueryString(initialState));
-      }
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [isSyncPathname, initialState]);
+    if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+      const handlePopState = () => {
+        if (isSyncPathname) {
+          _setState(getInitialStateWithQueryString(initialValue));
+        }
+      };
+      window.addEventListener("popstate", handlePopState);
+      return () => window.removeEventListener("popstate", handlePopState);
+    }
+  }, [isSyncPathname, initialValue]);
   const reset = (0, import_react.useCallback)(
     () => () => {
       setState(RESET);
@@ -124,6 +138,14 @@ function useQueryStringState(initialState, {
     []
   );
   return [state, setState, reset];
+}
+function isValidUrl(str) {
+  try {
+    new URL(str);
+    return true;
+  } catch (err) {
+    return false;
+  }
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

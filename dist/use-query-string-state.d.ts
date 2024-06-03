@@ -10,6 +10,6 @@ interface UseQueryStringStateOptions<S extends object> {
     queryString?: QueryString;
     isSyncPathname?: boolean;
 }
-declare function useQueryStringState<S extends object>(initialState: Readonly<S>, { onValueChange, onPathnameChange, queryString, isSyncPathname, }?: UseQueryStringStateOptions<S>): [S, Dispatch<SetStateAction<S>>, Function];
+declare function useQueryStringState<S extends object>(initialValue: Readonly<S>, { onValueChange, onPathnameChange, queryString, isSyncPathname, }?: UseQueryStringStateOptions<S>): [S, Dispatch<SetStateAction<S>>, Function];
 
 export { QueryString, UseQueryStringStateOptions, useQueryStringState };
